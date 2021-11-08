@@ -52,7 +52,8 @@ namespace Konsola
             GenerateMap(_xPos, _yPos);
             int pointInterval = 5;
             int pointsCount = CountPointOnMap(_xPos, _yPos);
-            pointsCount -= pointInterval;
+            if (pointsCount - 3 > pointInterval)
+                pointsCount -= pointInterval;
 
             while (true) {
                 var vectorInput = Console.ReadKey(true).KeyChar;
