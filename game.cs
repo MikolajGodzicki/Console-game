@@ -10,10 +10,11 @@ namespace Konsola
         //startowa pozycja x i y |oraz| deklaracja ilości punktów
         private static int _xPos = 1, _yPos = 1, _points;
         private const string Player = " O ";
-        private static string[] _blockCollision = {"[ ]", "___", "/", "|", " # "};
+        private static readonly string[] BlockCollision = {"[ ]", "___", "/", "|", " # "};
         private const string BlockPoint = " + ";
         private const string BlockWin = " # ";
         private static bool _win, _start;
+        private static int _level;
 
         private static readonly Dictionary<char, int[]> Vector = new() {
             {'w', new[] {0, -1}},
@@ -31,104 +32,113 @@ namespace Konsola
         static string[,] gamePole = {
             {"/","___","___","___","___","___","___","___","___","___","___", "/", "|_________________"},
             {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", "/________________/|"},
-            {"|","   ","   ","   ","   ","   "," + ","   ","[ ]","   ","   ", "|", " w -> go up     | |"},
-            {"|","   ","[ ]"," + ","   ","   ","[ ]","[ ]","[ ]","   ","   ", "|", " a -> go left   | |"},
-            {"|","   ","[ ]","[ ]","[ ]","[ ]","[ ]","[ ]","[ ]","[ ]","   ", "|", " s -> go down   | |"},
-            {"|"," + ","[ ]","[ ]","[ ]","[ ]","[ ]","[ ]","[ ]","[ ]","   ", "|", " d -> go right  | |"},
-            {"|","[ ]","[ ]","[ ]","[ ]","[ ]","   ","   ","[ ]","[ ]","   ", "|", "                | |"},
-            {"|","[ ]","[ ]","[ ]","[ ]","[ ]","   ","   ","[ ]","[ ]","   ", "|", " q -> enable    | |"},
-            {"|","   ","[ ]","[ ]","[ ]","[ ]","[ ]","   ","   "," + ","   ", "|", " developer mode | /"},
-            {"|","   ","   ","[ ]","[ ]"," + ","   ","   ","   ","   ","   ", "|", "________________|/"},
-            {"|"," # ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", "/"},
+            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", " w -> go up     | |"},
+            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", " a -> go left   | |"},
+            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", " s -> go down   | |"},
+            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", " d -> go right  | |"},
+            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", " e -> exit      | |"},
+            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", " q -> enable    | |"},
+            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", " developer mode | /"},
+            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", "________________|/"},
+            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", "/"},
             {"|","___","___","___","___","___","___","___","___","___","___", "/", ""}
         };
 
         private static void Main() {
-//Check platform compatibility - weryfikacja zgodności platformy       
+//Check platform compatibility - weryfikacja zgodności platformy -> wyłącza błąd o wielkości bufora konsoli
 #pragma warning disable CA1416 
             Console.SetBufferSize(128, 128);
             bool developerMode = true;
-            StartScreen();
-            GenerateMap(_xPos, _yPos);
-            int pointInterval = 5;
-            int pointsCount = CountPointOnMap(_xPos, _yPos);
-            if (pointsCount - 3 > pointInterval)
-                pointsCount -= pointInterval;
+            
+            while (true){
+                StartScreen();
+                GenerateMap(_xPos, _yPos);
 
-            while (true) {
-                var vectorInput = Console.ReadKey(true).KeyChar;
-                if (_start) { Console.Clear(); _start = false; }
+                int pointsCount = CountPointOnMap(_xPos, _yPos);
 
-                //Console.Clear();
-                Console.SetCursorPosition(0, 0); //Refreshowanie ekranu
-                //if (developerMode)
-                //    Console.SetWindowSize(32, 20);
-                //else
-                //    Console.SetWindowSize(32, 14);
-                Console.CursorVisible = false; //Ukrycie kursora
-                
-                switch (vectorInput)
+                while (true) 
                 {
-                    case 'a' when CanMove[1]:
-                        _xPos += Vector['a'][0];
-                        break;
-                    case 'd' when CanMove[3]:
-                        _xPos += Vector['d'][0];
-                        break;
-                    case 'w' when CanMove[0]:
-                        _yPos += Vector['w'][1];
-                        break;
-                    case 's' when CanMove[2]:
-                        _yPos += Vector['s'][1];
-                        break;
-                    case 'q':
-                        if (developerMode)
-                            developerMode = false;
-                        else
-                            developerMode = true;
-                        Console.Clear();
-                        break;
-                }
+                    var vectorInput = Console.ReadKey(true).KeyChar;
+                    if (_start) { Console.Clear(); _start = false; }
 
-                Check_Pos(_xPos, _yPos);
-                
-                if (_points >= pointsCount) { 
-                    _blockCollision[4] = "None";
-                    if(gamePole[_yPos,_xPos] == BlockWin)
-                        _win = true;
-                }
+                    if (vectorInput == 'e')
+                        return;
 
-                if (gamePole[_yPos, _xPos] == BlockPoint){ _points++; gamePole[_yPos,_xPos] = "   "; }
-
-                var collisionDetecionItem = Check_collision(_xPos,_yPos,gamePole);
-
-                Check_movement(collisionDetecionItem);
-                
-                if (developerMode) { 
-                    Console.Clear();
-                    Console.WriteLine($"x: {_xPos}, y:{_yPos}"); 
-                    Console.WriteLine($"CDI: {collisionDetecionItem}");
-                    Console.WriteLine($"BC: \"{_blockCollision[4]}\"");
-                    string[] words = {"up", "left", "down", "right" };
-                    for (var i = 0; i < words.Length; i++) { Console.WriteLine($"{words[i]}: {CanMove[i]} "); }
-                }
-                gamePole[_yPos, _xPos] = Player;
-                
-                for (var height = 0; height < YScale; height++) {
-                    for (var width = 0; width < XScale; width++) {
-                        Console.Write(gamePole[height, width]);
+                    Console.SetCursorPosition(0, 0); //Refreshowanie ekranu
+                    Console.CursorVisible = false; //Ukrycie kursora
+                    
+                    switch (vectorInput)
+                    {
+                        case 'a' when CanMove[1]:
+                            _xPos += Vector['a'][0];
+                            break;
+                        case 'd' when CanMove[3]:
+                            _xPos += Vector['d'][0];
+                            break;
+                        case 'w' when CanMove[0]:
+                            _yPos += Vector['w'][1];
+                            break;
+                        case 's' when CanMove[2]:
+                            _yPos += Vector['s'][1];
+                            break;
+                        case 'q':
+                            if (developerMode)
+                                developerMode = false;
+                            else
+                                developerMode = true;
+                            Console.Clear();
+                            break;
                     }
-                    Console.WriteLine();
-                }
-                Console.WriteLine($"Points: {_points}/{pointsCount}");
-                
-                if (gamePole[_yPos,_xPos] != BlockWin)
-                    gamePole[_yPos,_xPos] = "   ";
 
-                if (!_win)
-                    continue;
-                WinGame();
-                break;
+                    Check_Pos(_xPos, _yPos);
+                    
+                    if (_points >= pointsCount) { 
+                        BlockCollision[4] = "None";
+                        if(gamePole[_yPos,_xPos] == BlockWin)
+                            _win = true;
+                    }
+
+                    if (gamePole[_yPos, _xPos] == BlockPoint){ _points++; gamePole[_yPos,_xPos] = "   "; }
+
+                    var collisionDetecionItem = Check_collision(_xPos,_yPos,gamePole);
+
+                    Check_movement(collisionDetecionItem);
+                    
+                    if (developerMode) { 
+                        Console.Clear();
+                        Console.WriteLine($"x: {_xPos}, y:{_yPos}"); 
+                        Console.WriteLine($"CDI: {collisionDetecionItem}");
+                        Console.WriteLine($"BC: \"{BlockCollision[4]}\"");
+                        string[] words = {"up", "left", "down", "right" };
+                        for (var i = 0; i < words.Length; i++) { Console.WriteLine($"{words[i]}: {CanMove[i]} "); }
+                        Console.WriteLine("Press 'q' to disable flashing screen.");
+                    }
+                    gamePole[_yPos, _xPos] = Player;
+                    
+                    for (var height = 0; height < YScale; height++) {
+                        for (var width = 0; width < XScale; width++) {
+                            Console.Write(gamePole[height, width]);
+                        }
+                        Console.WriteLine();
+                    }
+                    Console.WriteLine($"Points: {_points}/{pointsCount}");
+                    Console.WriteLine($"Actual level: {_level}");
+                    
+                    if (gamePole[_yPos,_xPos] != BlockWin)
+                        gamePole[_yPos,_xPos] = "   ";
+
+                    if (!_win)
+                        continue;
+                    WinGame();
+                    _level += 1;
+                    break;
+                }
+                Console.Clear();
+                _win = false;
+                _points = 0;
+                BlockCollision[4] = " # ";
+                _xPos = 1;
+                _yPos = 1;
             }
         }
 
@@ -151,23 +161,22 @@ namespace Konsola
             //CanMove -> up, left, down, right      
             var collisionDetecionItem = 0;
             if (yPosP > 0)
-                //if (gamePoleP[yPosP - 1, xPosP] == BlockCollision)
-                if (_blockCollision.Contains(gamePoleP[yPosP - 1, xPosP]))
+                if (BlockCollision.Contains(gamePoleP[yPosP - 1, xPosP]))
                 {
                     collisionDetecionItem += 1;
                 }
             if (xPosP > 0)
-                if (_blockCollision.Contains(gamePoleP[yPosP, xPosP - 1]))
+                if (BlockCollision.Contains(gamePoleP[yPosP, xPosP - 1]))
                 {
                     collisionDetecionItem += 2;
                 }
             if (yPosP < YScale - 1)
-                if (_blockCollision.Contains(gamePoleP[yPosP + 1, xPosP]))
+                if (BlockCollision.Contains(gamePoleP[yPosP + 1, xPosP]))
                 {
                     collisionDetecionItem += 4;
                 }
             if (xPosP < XScale - 1)
-                if (_blockCollision.Contains(gamePoleP[yPosP,xPosP + 1]))
+                if (BlockCollision.Contains(gamePoleP[yPosP,xPosP + 1]))
                 {
                     collisionDetecionItem += 8;
                 }
@@ -209,7 +218,7 @@ namespace Konsola
             int rand;
             Random randomBlock = new Random();
             string[] blocks = {"   ","[ ]"," + "};
-            int xEnd = XScale - 2, yEnd = YScale - 1;
+            int xEnd = XScale - 3, yEnd = YScale - 2;
             bool isBlockWin = false;
             for (int width = xPos; width < xEnd; width++) {
                 for (int height = yPos; height < yEnd; height++)
@@ -219,29 +228,36 @@ namespace Konsola
                         rand = randomBlock.Next(0,blocks.Length);
                     else
                         rand = 0;
-                    if (collisionItem < 16 && rand == 2)
-                        gamePole[height,width] = blocks[rand];
+                    if (collisionItem < 1 && rand == 2)
+                        gamePole[height,width] = blocks[2];
                     else
                         gamePole[height,width] = blocks[rand];
                 }
             }
+
             while (!isBlockWin)
             {
-                var xRand = randomBlock.Next(0,xEnd);
-                var yRand = randomBlock.Next(0,yEnd);
-                for (int width = xPos; width < xEnd;) {
+                var xRand = randomBlock.Next(0, xEnd);
+                var yRand = randomBlock.Next(0, yEnd);
+                for (int width = xPos; width < xEnd;)
+                {
                     for (int height = yPos; height < yEnd; height++)
                     {
-                        if (gamePole[yRand,xRand] != BlockPoint && !_blockCollision.Contains(gamePole[yRand,xRand])) {
-                            gamePole[yRand,xRand] = BlockWin;
+                        var collisionItem = Check_collision(width, height, gamePole);
+                        if (gamePole[yRand, xRand] != BlockPoint && !BlockCollision.Contains(gamePole[yRand, xRand]))
+                        {
+                            if (collisionItem < 7)
+                                gamePole[yRand, xRand] = BlockWin;
                             if (yRand > 2 && xRand > 2)
-                                for (int x = 1; x<3; x++)
-                                    for (int i = 1; i < 3; i++)
-                                        gamePole[yRand - x,xRand - i] = "   ";
+                                for (int x = 0; x < 4; x++)
+                                for (int i = 0; i < 4; i++)
+                                    if (gamePole[yRand - x, xRand - i] == "[ ]")
+                                        gamePole[yRand - x, xRand - i] = "   ";
                             isBlockWin = true;
                             break;
                         }
                     }
+
                     break;
                 }
             }
@@ -277,5 +293,10 @@ namespace Konsola
             Console.WriteLine("           You win!            ");
             Console.WriteLine("-------------------------------");
         }
+    }
+
+    class Enemy
+    {
+        
     }
 }
