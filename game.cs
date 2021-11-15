@@ -263,6 +263,25 @@ namespace Konsola
             }
         }
 
+        private static void CheckPointCollisions()
+        {
+            int xEnd = XScale - 3, yEnd = YScale - 2;
+            for (int width = 1; width < xEnd; width++) {
+                for (int height = 1; height < yEnd; height++)
+                {
+                    var collisionItem = Check_collision(width, height, gamePole);
+                    if (gamePole[height, width] == BlockPoint && collisionItem == 1)
+                        gamePole[height - 1, width] = "   ";
+                    else if (gamePole[height, width] == BlockPoint && collisionItem == 2)
+                        gamePole[height, width - 1] = "   ";
+                    else if (gamePole[height, width] == BlockPoint && collisionItem == 4)
+                        gamePole[height + 1, width] = "   ";
+                    else if (gamePole[height, width] == BlockPoint && collisionItem == 8)
+                        gamePole[height, width + 1] = "   ";
+                }
+            }
+        }
+
         private static int CountPointOnMap(int xPos, int yPos)
         {
             int xEnd = XScale - 2, yEnd = YScale - 1;
