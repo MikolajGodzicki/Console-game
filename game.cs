@@ -53,6 +53,7 @@ namespace Konsola
             while (true){
                 StartScreen();
                 GenerateMap(_xPos, _yPos);
+                CheckPointCollisions();
 
                 int pointsCount = CountPointOnMap(_xPos, _yPos);
 
@@ -312,10 +313,5 @@ namespace Konsola
             Console.WriteLine("           You win!            ");
             Console.WriteLine("-------------------------------");
         }
-    }
-
-    class Enemy
-    {
-        
     }
 }
