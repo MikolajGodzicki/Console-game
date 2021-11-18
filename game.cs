@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Konsola
+namespace Game
 {
-    class Program
+    static class Program
     {
         private const int XScale = 13, YScale = 12;
         //startowa pozycja x i y |oraz| deklaracja ilości punktów
@@ -12,7 +12,6 @@ namespace Konsola
         private const string Player = " O ";
         private static readonly string[] BlockCollision = {"[ ]", "___", "/", "|", " # "};
         private const string BlockPoint = " + ";
-        private const string BlockWin = " # ";
         private static bool _win, _start;
         private static int _level;
 
@@ -29,33 +28,61 @@ namespace Konsola
             CanMove = new[] {true,true,true,true};
         }
         
+        private static Dictionary<string,string> _languageTranslation = new() {
+            {"EN_en=START","Click any key to start"},
+            {"EN_en=WIN","You win!"},
+            {"EN_en=UP","go up         "},
+            {"EN_en=LEFT","go left       "},
+            {"EN_en=DOWN","go down       "},
+            {"EN_en=RIGHT","go right      "},
+            {"EN_en=EXIT","exit          "},
+            {"EN_en=DEV_MODE","dev mode      "},
+            {"EN_en=RE_GEN","regenerate map"},
+            {"EN_en=POINTS","Points"},
+            {"EN_en=LVL","Actual Level"},
+            
+            {"PL_pl=START", "Naciśnij przycisk aby zacząć"},
+            {"PL_pl=WIN", "Wygrałeś!"},
+            {"PL_pl=UP", "w górę        "},
+            {"PL_pl=LEFT", "w lewo        "},
+            {"PL_pl=DOWN", "w dół         "},
+            {"PL_pl=RIGHT", "w prawo       "},
+            {"PL_pl=EXIT", "wyjdź         "},
+            {"PL_pl=DEV_MODE", "tryb dev'a    "},
+            {"PL_pl=RE_GEN","regeneruj mapę"},
+            {"PL_pl=POINTS", "Punkty"},
+            {"PL_pl=LVL", "Aktualny Poziom"},
+        };
+        
+        //Config
+        static bool _developerMode;
+        readonly static string Language = "EN_en=";
+        //Config
+        
         static string[,] gamePole = {
-            {"/","___","___","___","___","___","___","___","___","___","___", "/", "|_________________"},
-            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", "/________________/|"},
-            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", " w -> go up     | |"},
-            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", " a -> go left   | |"},
-            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", " s -> go down   | |"},
-            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", " d -> go right  | |"},
-            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", " e -> exit      | |"},
-            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", " q -> enable    | |"},
-            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", " developer mode | /"},
-            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", "________________|/"},
+            {"/","___","___","___","___","___","___","___","___","___","___", "/", "|_____________________"},
+            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", "/____________________/|"},
+            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", $" w -> {_languageTranslation[Language+"UP"]}| |"},
+            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", $" a -> {_languageTranslation[Language+"LEFT"]}| |"},
+            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", $" s -> {_languageTranslation[Language+"DOWN"]}| |"},
+            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", $" d -> {_languageTranslation[Language+"RIGHT"]}| |"},
+            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", $" e -> {_languageTranslation[Language+"EXIT"]}| |"},
+            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", $" q -> {_languageTranslation[Language+"DEV_MODE"]}| |"},
+            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", $" r -> {_languageTranslation[Language+"RE_GEN"]}| /"},
+            {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", "____________________|/"},
             {"|","   ","   ","   ","   ","   ","   ","   ","   ","   ","   ", "|", "/"},
             {"|","___","___","___","___","___","___","___","___","___","___", "/", ""}
         };
-
+        
         private static void Main() {
-//Check platform compatibility - weryfikacja zgodności platformy -> wyłącza błąd o wielkości bufora konsoli
-#pragma warning disable CA1416 
-            Console.SetBufferSize(128, 128);
-            bool developerMode = true;
-            
             while (true){
                 StartScreen();
                 GenerateMap(_xPos, _yPos);
-                CheckPointCollisions();
-
+                
                 int pointsCount = CountPointOnMap(_xPos, _yPos);
+                int pointsOffset = 5;
+                if (pointsCount > pointsOffset + 2)
+                    pointsCount -= pointsOffset;
 
                 while (true) 
                 {
@@ -66,7 +93,7 @@ namespace Konsola
                         return;
 
                     Console.SetCursorPosition(0, 0); //Refreshowanie ekranu
-                    Console.CursorVisible = false; //Ukrycie kursora
+                    Console.CursorVisible = false; //Ukrycie "kursora"
                     
                     switch (vectorInput)
                     {
@@ -83,20 +110,26 @@ namespace Konsola
                             _yPos += Vector['s'][1];
                             break;
                         case 'q':
-                            if (developerMode)
-                                developerMode = false;
+                            if (_developerMode)
+                                _developerMode = false;
                             else
-                                developerMode = true;
+                                _developerMode = true;
                             Console.Clear();
+                            break;
+                        case 'r':
+                            Console.Clear();
+                            ClearVariables();
+                            GenerateMap(_xPos, _yPos);
+                            pointsCount = CountPointOnMap(_xPos, _yPos);
+                            if (pointsCount > pointsOffset + 2)
+                                pointsCount -= pointsOffset;
                             break;
                     }
 
                     Check_Pos(_xPos, _yPos);
                     
-                    if (_points >= pointsCount) { 
-                        BlockCollision[4] = "None";
-                        if(gamePole[_yPos,_xPos] == BlockWin)
-                            _win = true;
+                    if (_points >= pointsCount && pointsCount != 0) {
+                        _win = true;
                     }
 
                     if (gamePole[_yPos, _xPos] == BlockPoint){ _points++; gamePole[_yPos,_xPos] = "   "; }
@@ -105,7 +138,7 @@ namespace Konsola
 
                     Check_movement(collisionDetecionItem);
                     
-                    if (developerMode) { 
+                    if (_developerMode) { 
                         Console.Clear();
                         Console.WriteLine($"x: {_xPos}, y:{_yPos}"); 
                         Console.WriteLine($"CDI: {collisionDetecionItem}");
@@ -122,11 +155,10 @@ namespace Konsola
                         }
                         Console.WriteLine();
                     }
-                    Console.WriteLine($"Points: {_points}/{pointsCount}");
-                    Console.WriteLine($"Actual level: {_level}");
+                    Console.WriteLine($"{_languageTranslation[Language+"POINTS"]}: {_points}/{pointsCount}");
+                    Console.WriteLine($"{_languageTranslation[Language+"LVL"]}: {_level}");
                     
-                    if (gamePole[_yPos,_xPos] != BlockWin)
-                        gamePole[_yPos,_xPos] = "   ";
+                    gamePole[_yPos,_xPos] = "   ";
 
                     if (!_win)
                         continue;
@@ -134,12 +166,6 @@ namespace Konsola
                     _level += 1;
                     break;
                 }
-                Console.Clear();
-                _win = false;
-                _points = 0;
-                BlockCollision[4] = " # ";
-                _xPos = 1;
-                _yPos = 1;
             }
         }
 
@@ -148,10 +174,10 @@ namespace Konsola
                 _xPos = XScale - 1;
             if (yPosP >= YScale - 1)
                 _yPos = YScale - 1;
-            if (xPosP < 0)
-                _xPos = 0;
-            if (yPosP < 0)
-                _yPos = 0;
+            if (xPosP < 1)
+                _xPos = 1;
+            if (yPosP < 1)
+                _yPos = 1;
         }
 
         private static int Check_collision(int xPosP, int yPosP, string[,] gamePoleP)
@@ -188,7 +214,7 @@ namespace Konsola
         static void Check_movement(int collisionDetecionItemPrivate)
         {
             const int countOfCollisions = 16;
-            Dictionary<int,bool[]> collisionDetect = new Dictionary<int,bool[]>() {
+            Dictionary<int,bool[]> collisionDetect = new Dictionary<int,bool[]> {
                 {0, new[] {true, true, true, true}},
                 {1, new[] {false, true, true, true}},
                 {2, new[] {true, false, true, true}},
@@ -219,13 +245,12 @@ namespace Konsola
             int rand;
             Random randomBlock = new Random();
             string[] blocks = {"   ","[ ]"," + "};
-            int xEnd = XScale - 3, yEnd = YScale - 2;
-            bool isBlockWin = false;
+            int xEnd = XScale - 2, yEnd = YScale - 1;
             for (int width = xPos; width < xEnd; width++) {
                 for (int height = yPos; height < yEnd; height++)
                 {
                     var collisionItem = Check_collision(width, height, gamePole);
-                    if (width > xPos && height > yPos)
+                    if (width >= xPos && height > yPos)
                         rand = randomBlock.Next(0,blocks.Length);
                     else
                         rand = 0;
@@ -235,50 +260,39 @@ namespace Konsola
                         gamePole[height,width] = blocks[rand];
                 }
             }
-
-            while (!isBlockWin)
-            {
-                var xRand = randomBlock.Next(0, xEnd);
-                var yRand = randomBlock.Next(0, yEnd);
-                for (int width = xPos; width < xEnd;)
-                {
-                    for (int height = yPos; height < yEnd; height++)
-                    {
-                        var collisionItem = Check_collision(width, height, gamePole);
-                        if (gamePole[yRand, xRand] != BlockPoint && !BlockCollision.Contains(gamePole[yRand, xRand]))
-                        {
-                            if (collisionItem < 7)
-                                gamePole[yRand, xRand] = BlockWin;
-                            if (yRand > 2 && xRand > 2)
-                                for (int x = 0; x < 4; x++)
-                                for (int i = 0; i < 4; i++)
-                                    if (gamePole[yRand - x, xRand - i] == "[ ]")
-                                        gamePole[yRand - x, xRand - i] = "   ";
-                            isBlockWin = true;
-                            break;
-                        }
-                    }
-
-                    break;
-                }
-            }
+            CheckPointCollisions();
         }
 
         private static void CheckPointCollisions()
         {
-            int xEnd = XScale - 3, yEnd = YScale - 2;
+            int xEnd = XScale - 2, yEnd = YScale - 1;
             for (int width = 1; width < xEnd; width++) {
                 for (int height = 1; height < yEnd; height++)
                 {
                     var collisionItem = Check_collision(width, height, gamePole);
                     if (gamePole[height, width] == BlockPoint && collisionItem == 1)
-                        gamePole[height - 1, width] = "   ";
-                    else if (gamePole[height, width] == BlockPoint && collisionItem == 2)
-                        gamePole[height, width - 1] = "   ";
-                    else if (gamePole[height, width] == BlockPoint && collisionItem == 4)
-                        gamePole[height + 1, width] = "   ";
-                    else if (gamePole[height, width] == BlockPoint && collisionItem == 8)
-                        gamePole[height, width + 1] = "   ";
+                    {
+                        if (gamePole[height - 1,width] == BlockCollision[0])
+                            gamePole[height - 1,width] = "   ";
+                        continue;
+                    }
+                    if (gamePole[height, width] == BlockPoint && collisionItem == 2)
+                    {
+                        if (gamePole[height,width - 1] == BlockCollision[0])
+                            gamePole[height,width - 1] = "   ";
+                        continue;
+                    }
+                    if (gamePole[height, width] == BlockPoint && collisionItem == 4)
+                    {
+                        if (gamePole[height + 1,width] == BlockCollision[0])
+                            gamePole[height + 1,width] = "   ";
+                        continue;
+                    }
+                    if (gamePole[height, width] == BlockPoint && collisionItem == 8)
+                    {
+                        if (gamePole[height,width + 1] == BlockCollision[0])
+                            gamePole[height,width + 1] = "   ";
+                    }
                 }
             }
         }
@@ -300,18 +314,45 @@ namespace Konsola
 
         private static void StartScreen()
         {
-            //Console.SetWindowSize(35, 4);
-            Console.WriteLine("-----------------------------------");
-            Console.WriteLine("      Click any key to start       ");
-            Console.WriteLine("-----------------------------------");
+            for (int i = 0; i <= _languageTranslation[Language+"START"].Length + 3; i++)
+            {
+                Console.Write("-");
+            }
+            Console.WriteLine();
+            Console.WriteLine($"| {_languageTranslation[Language+"START"]} |");
+            for (int i = 0; i <= _languageTranslation[Language+"START"].Length + 3; i++)
+            {
+                Console.Write("-");
+            }
             _start = true;
         }
         
         private static void WinGame()
         {
-            Console.WriteLine("-------------------------------");
-            Console.WriteLine("           You win!            ");
-            Console.WriteLine("-------------------------------");
+            for (int i = 0; i <= _languageTranslation[Language+"WIN"].Length + 7; i++)
+            {
+                Console.Write("-");
+            }
+            Console.WriteLine();
+            Console.WriteLine($"|   {_languageTranslation[Language+"WIN"]}   |");
+            for (int i = 0; i <= _languageTranslation[Language+"WIN"].Length + 7; i++)
+            {
+                Console.Write("-");
+            }
+            Console.ReadKey(true);
+            Console.Clear();
+            _win = false;
+            _points = 0;
+            _xPos = 1;
+            _yPos = 1;
+        }
+
+        static void ClearVariables()
+        {
+            _win = false;
+            _points = 0;
+            _xPos = 1;
+            _yPos = 1;
         }
     }
 }
