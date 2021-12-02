@@ -341,10 +341,7 @@ namespace Game
             }
             Console.ReadKey(true);
             Console.Clear();
-            _win = false;
-            _points = 0;
-            _xPos = 1;
-            _yPos = 1;
+            ClearVariables();
         }
 
         static void ClearVariables()
